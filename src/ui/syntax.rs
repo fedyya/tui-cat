@@ -7,7 +7,7 @@ use syntect::highlighting::{Style, ThemeSet};
 use syntect::parsing::SyntaxSet;
 
 /// テキストがシンタックスハイライト可能であれば変更する
-pub fn hylight<'a, 'b, T1, T2>(text: T1, extension: T2) -> Text<'a>
+pub fn hylight<'a, 'b, T1, T2>(text: T1, extension: T2, tab_width: usize) -> Text<'a>
 where
     T1: Into<Cow<'a, str>> + ToString,
     T2: Into<Cow<'b, str>>,
@@ -23,8 +23,18 @@ where
 
     let mut h = HighlightLines::new(syntax, &ts.themes["base16-eighties.dark"]);
 
+    // タブをスペースに展開してから行分割する
     let mut spans: Vec<Line> = Vec::with_capacity(500);
-    for line in text.to_string().lines() {
+    let processed = {
+        let s = text.to_string();
+        if tab_width == 0 {
+            s
+        } else {
+            s.replace('\t', &" ".repeat(tab_width))
+        }
+    };
+
+    for line in processed.lines() {
         let span: Vec<Span> = h
             .highlight_line(line, &ps)
             .unwrap()

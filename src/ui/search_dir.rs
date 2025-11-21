@@ -39,10 +39,12 @@ pub struct Events<'a> {
     pub property_mode: bool,
     /// 行数を表すモード
     pub line_mode: bool,
+    /// タブを何スペースに展開するか
+    pub tab_width: usize,
 }
 
-impl<'a> Events<'_> {
-    pub fn new() -> Events<'a> {
+impl<'a> Events<'a> {
+    pub fn new(tab_width: usize) -> Events<'a> {
         //カウントディレクトリを取得
         let dir = env::current_dir().unwrap().read_dir().unwrap();
 
@@ -57,6 +59,7 @@ impl<'a> Events<'_> {
             property: None,
             property_mode: false,
             line_mode: false,
+            tab_width,
         };
 
         eve.property = Property::new(eve.path.as_path());
@@ -178,7 +181,7 @@ impl<'a> Events<'_> {
                     .unwrap_or(OsStr::new("txt"))
                     .to_str()
                     .unwrap_or("txt");
-                self.data = syntax::hylight(text, extension);
+                self.data = syntax::hylight(text, extension, self.tab_width);
                 self.property = Property::new(&self.path);
 
                 // linemodeを初期化
@@ -257,6 +260,10 @@ impl<'a> Events<'_> {
     pub fn change_linemode(&mut self) {
         self.line_mode = !self.line_mode;
         let line = self.data.lines.len();
+
+        if line == 0 {
+            return;
+        }
 
         if self.line_mode {
             // 行数番号を表す"001 |"を挿入する
@@ -337,7 +344,7 @@ pub fn search_directory(dir: ReadDir) -> [Vec<OsString>; 2] {
 
 #[test]
 fn back_file_test() {
-    let mut x = Events::new();
+    let mut x = Events::new(4);
     x.back_file();
 
     let mut a = env::current_dir().unwrap();

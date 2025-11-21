@@ -7,10 +7,30 @@ use crate::ui::{
     search_dir,
 };
 use crossterm::terminal;
+use std::env;
 
 fn main() {
+    // CLI 引数の簡易パース: --space N
+    let args: Vec<String> = env::args().collect();
+    let mut space: usize = 4;
+    let mut i = 1;
+    while i < args.len() {
+        match args[i].as_str() {
+            "--space" | "-s" => {
+                if i + 1 < args.len() {
+                    if let Ok(v) = args[i + 1].parse::<usize>() {
+                        space = v;
+                    }
+                    i += 1;
+                }
+            }
+            _ => {}
+        }
+        i += 1;
+    }
+
     //初期設定
-    let mut list = search_dir::Events::new();
+    let mut list = search_dir::Events::new(space);
 
     list.next();
     //rawモードon
