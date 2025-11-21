@@ -31,13 +31,13 @@ pub enum Key {
 }
 
 impl Key {
-    pub const fn find(f:KeyCode) -> Key {
+    pub const fn find(f: KeyCode) -> Key {
         match f {
-            KeyCode::Up    => Key::Up,
-            KeyCode::Down  => Key::Down,
+            KeyCode::Up => Key::Up,
+            KeyCode::Down => Key::Down,
             KeyCode::Right => Key::Next,
             KeyCode::Enter => Key::Enter,
-            KeyCode::Left  => Key::Back,
+            KeyCode::Left => Key::Back,
             KeyCode::Char(c) => match c {
                 'a' => Key::Back,
                 'd' => Key::Next,
@@ -62,7 +62,7 @@ impl Key {
 /// ``` rust
 /// use crate::ui::events;
 /// let key: Key = event::input();
-/// 
+///
 /// // wキーを押す
 /// print!("{:?}", key);
 /// // Key::Up
@@ -70,14 +70,12 @@ impl Key {
 #[inline]
 pub fn input() -> Key {
     //! 標準入力
-    //! 
+    //!
     //! 一文字づつ値を読み込み[Key]を返す
     if let Event::Key(f) = read().unwrap() {
         match f.kind {
-            KeyEventKind::Press | KeyEventKind::Repeat => {
-                Key::find(f.code)
-            },
-            _ => Key::None
+            KeyEventKind::Press | KeyEventKind::Repeat => Key::find(f.code),
+            _ => Key::None,
         }
     } else {
         Key::None

@@ -1,12 +1,12 @@
-mod ui;
 mod components;
+mod ui;
 
-use crossterm::terminal;
 use crate::ui::{
     draw::draw,
     events::{self, Key},
     search_dir,
 };
+use crossterm::terminal;
 
 fn main() {
     //初期設定
@@ -22,48 +22,58 @@ fn main() {
         //入力
         list.key = events::input();
 
-		// サブモード時の処理
-		if list.submode {
-			match list.key {
-				Key::Exit |
-				Key::ExitMove => break,
-				Key::Up     => if !list.property_mode {list.back()},
-				Key::Down   => if !list.property_mode {list.next()},
-				Key::Change => list.change(),
-				Key::Enter  => {},
-				Key::Next   => if !list.property_mode {list.subnext()}, 
-				Key::Back   => list.subback(),
-				Key::PropertyMode => {
-					list.reset_substate();
-					list.property_mode = !list.property_mode;
-				},
-				Key::LineMode => list.change_linemode(),
-				Key::MoveFirstLine => list.move_first_line(),
-				Key::MoveLastLine => list.move_last_line(),
-				Key::None   => {}
-			}
+        // サブモード時の処理
+        if list.submode {
+            match list.key {
+                Key::Exit | Key::ExitMove => break,
+                Key::Up => {
+                    if !list.property_mode {
+                        list.back()
+                    }
+                }
+                Key::Down => {
+                    if !list.property_mode {
+                        list.next()
+                    }
+                }
+                Key::Change => list.change(),
+                Key::Enter => {}
+                Key::Next => {
+                    if !list.property_mode {
+                        list.subnext()
+                    }
+                }
+                Key::Back => list.subback(),
+                Key::PropertyMode => {
+                    list.reset_substate();
+                    list.property_mode = !list.property_mode;
+                }
+                Key::LineMode => list.change_linemode(),
+                Key::MoveFirstLine => list.move_first_line(),
+                Key::MoveLastLine => list.move_last_line(),
+                Key::None => {}
+            }
 
-			continue;
-		}
+            continue;
+        }
 
-		// 通常選択時の処理
+        // 通常選択時の処理
         match list.key {
-            Key::Exit |
-            Key::ExitMove => break,
-            Key::Up     => list.back(),
-            Key::Down   => list.next(),
+            Key::Exit | Key::ExitMove => break,
+            Key::Up => list.back(),
+            Key::Down => list.next(),
             Key::Change => list.change(),
-            Key::Enter  => list.open_file(),
-            Key::Next   => list.open_file(),
-            Key::Back   => list.back_file(),
+            Key::Enter => list.open_file(),
+            Key::Next => list.open_file(),
+            Key::Back => list.back_file(),
             Key::PropertyMode => {
                 list.reset_substate();
                 list.property_mode = !list.property_mode;
-            },
+            }
             Key::LineMode => list.change_linemode(),
             Key::MoveFirstLine => list.move_first_line(),
             Key::MoveLastLine => list.move_last_line(),
-            Key::None   => {}
+            Key::None => {}
         }
     }
     //画面をクリア

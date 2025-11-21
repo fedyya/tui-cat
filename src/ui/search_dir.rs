@@ -1,11 +1,19 @@
 use crate::components::check_property::Property;
 
-use std::{env, fs::{read_to_string, ReadDir}, path::PathBuf, ffi::{OsString, OsStr}};
 use crossterm::terminal;
-use ratatui::{text::{Text, Span}, widgets::ListState};
+use ratatui::{
+    text::{Span, Text},
+    widgets::ListState,
+};
+use std::{
+    env,
+    ffi::{OsStr, OsString},
+    fs::{read_to_string, ReadDir},
+    path::PathBuf,
+};
 
-use crate::Key;
 use crate::ui::syntax;
+use crate::Key;
 
 pub struct Events<'a> {
     ///ディレクトリ内のファイル・フォルダを取得
@@ -16,11 +24,11 @@ pub struct Events<'a> {
     ///選択肢の保存場所
     pub state: ListState,
     ///サブ切り替え時の選択肢の仮保存場所
-    /// - true  <br>サブモードon 
+    /// - true  <br>サブモードon
     /// - false <br>サブモードoff
     pub submode: bool,
     ///サブ時の値保存場所
-    pub substate: (u16,u16),
+    pub substate: (u16, u16),
     ///キーボードで入力された文字列
     pub key: Key,
     ///ファイルの中身
@@ -30,7 +38,7 @@ pub struct Events<'a> {
     /// プロパティモード
     pub property_mode: bool,
     /// 行数を表すモード
-    pub line_mode : bool,
+    pub line_mode: bool,
 }
 
 impl<'a> Events<'_> {
@@ -39,32 +47,31 @@ impl<'a> Events<'_> {
         let dir = env::current_dir().unwrap().read_dir().unwrap();
 
         let mut eve = Events {
-            items:    search_directory(dir),
-            path:     env::current_dir().unwrap(),
-            state:    ListState::default(),
-            submode:  false,
-            substate: (0,0),
-            key:      Key::None,
-            data:     Text::raw(""),
+            items: search_directory(dir),
+            path: env::current_dir().unwrap(),
+            state: ListState::default(),
+            submode: false,
+            substate: (0, 0),
+            key: Key::None,
+            data: Text::raw(""),
             property: None,
             property_mode: false,
-            line_mode : false,
+            line_mode: false,
         };
 
         eve.property = Property::new(eve.path.as_path());
         eve
     }
-    
+
     ///選択を一つ次に進める
-    pub fn next(&mut self) { 
-        match self.submode
-        {
+    pub fn next(&mut self) {
+        match self.submode {
             true => {
                 // submode時の下限サイズ設定
                 if (self.substate.0 as usize) < self.limit_down_size() {
                     self.substate.0 = self.substate.0.saturating_add(1);
                 }
-            },
+            }
             false => {
                 if !self.items.is_empty() {
                     let i = match self.state.selected() {
@@ -89,7 +96,7 @@ impl<'a> Events<'_> {
         match self.submode {
             true => {
                 self.substate.0 = self.substate.0.saturating_sub(1);
-            },
+            }
             false => {
                 if !self.items.is_empty() {
                     let i = match self.state.selected() {
@@ -108,13 +115,13 @@ impl<'a> Events<'_> {
         }
     }
 
-	/// substateの値を1増やす
+    /// substateの値を1増やす
     #[inline]
     pub fn subnext(&mut self) {
         self.substate.1 = self.substate.1.saturating_add(1);
     }
 
-	/// substateの値を1減らす
+    /// substateの値を1減らす
     #[inline]
     pub fn subback(&mut self) {
         self.substate.1 = self.substate.1.saturating_sub(1);
@@ -165,13 +172,15 @@ impl<'a> Events<'_> {
                     .unwrap_or("ファイルが開けませんでした".to_string());
 
                 // ファイルの拡張子を取得
-                let extension = self.path.extension()
+                let extension = self
+                    .path
+                    .extension()
                     .unwrap_or(OsStr::new("txt"))
                     .to_str()
                     .unwrap_or("txt");
                 self.data = syntax::hylight(text, extension);
                 self.property = Property::new(&self.path);
-                
+
                 // linemodeを初期化
                 self.line_mode = false;
             }
@@ -190,10 +199,10 @@ impl<'a> Events<'_> {
         //! //    |--folder_02
         //! //       |--folder_03 <- 現在値1
         //! //           |--file.txt <- 現在値2
-        //! 
+        //!
         //! let mut event: Events = search_dir::Events::new();
         //! event.back_file();
-        //! 
+        //!
         //! // C
         //! // |--folder_01
         //! //    |--folder_02 <- 現在値1, 現在値2
@@ -204,11 +213,7 @@ impl<'a> Events<'_> {
             self.path.pop();
         }
 
-        let this_folder: OsString = self.path
-            .iter()
-            .last()
-            .unwrap()
-            .to_os_string();
+        let this_folder: OsString = self.path.iter().last().unwrap().to_os_string();
 
         self.path.pop();
 
@@ -216,11 +221,14 @@ impl<'a> Events<'_> {
 
         // 選択肢を現在のフォルダに選択
         if self.path.file_name().is_some() {
-            let this_state = self.items[0].iter().position(|f| Into::<OsString>::into(f) == this_folder).unwrap();
+            let this_state = self.items[0]
+                .iter()
+                .position(|f| Into::<OsString>::into(f) == this_folder)
+                .unwrap();
             self.state.select(Some(this_state));
         }
     }
-    
+
     /// カウントディレクトリを変更する
     pub fn _move_dir(&mut self) {
         if self.path.is_file() {
@@ -242,19 +250,19 @@ impl<'a> Events<'_> {
     /// [Events::substate]を(0,0)に設定する
     #[inline]
     pub fn reset_substate(&mut self) {
-        self.substate = (0,0);
+        self.substate = (0, 0);
     }
 
     /// linemode切り替え
     pub fn change_linemode(&mut self) {
         self.line_mode = !self.line_mode;
         let line = self.data.lines.len();
-        
+
         if self.line_mode {
             // 行数番号を表す"001 |"を挿入する
             // ファイルの行数から桁数を求める
             let digit_count = (line.ilog10() + 1) as usize;
-            
+
             for i in 0..line {
                 let line_text = format!("{:0>digit_count$} |", i + 1);
                 let line_span = Span::raw(line_text);
@@ -287,7 +295,10 @@ impl<'a> Events<'_> {
     /// ターミナル上に表示できる最大の下げ幅を取得
     #[inline]
     fn limit_down_size(&self) -> usize {
-        self.data.lines.len().saturating_sub(terminal::size().unwrap().1 as usize - 6)
+        self.data
+            .lines
+            .len()
+            .saturating_sub(terminal::size().unwrap().1 as usize - 6)
     }
 }
 
@@ -302,20 +313,17 @@ pub fn search_directory(dir: ReadDir) -> [Vec<OsString>; 2] {
     //!     .unwrap()
     //!     .read_dir()
     //!     .unwrap();
-    //! 
+    //!
     //! let mut list: Vec<String> = search_directory(path);
     //! asset_eq!(list, Vec[b,d,a,c]);
     //! ```
     let mut folder: Vec<OsString> = Vec::with_capacity(30);
     let mut file: Vec<OsString> = Vec::with_capacity(50);
-    
+
     for data in dir {
         let path = data.unwrap().path();
 
-        let name = path
-            .file_name()
-            .unwrap()
-            .to_os_string();
+        let name = path.file_name().unwrap().to_os_string();
 
         if path.is_dir() {
             folder.push(name);

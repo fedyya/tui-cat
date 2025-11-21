@@ -1,6 +1,13 @@
-use ratatui::{text::{Text, Span, Line}, style::Style};
-use chrono::{DateTime, Utc, NaiveDateTime, Datelike, Timelike, TimeDelta};
-use std::{path::{Path, PathBuf}, fs::Metadata, io::{Error, ErrorKind}};
+use chrono::{DateTime, Datelike, NaiveDateTime, TimeDelta, Timelike, Utc};
+use ratatui::{
+    style::Style,
+    text::{Line, Span, Text},
+};
+use std::{
+    fs::Metadata,
+    io::{Error, ErrorKind},
+    path::{Path, PathBuf},
+};
 
 /// 時差
 const TIME_DIFFERENSE: i64 = 9;
@@ -50,22 +57,20 @@ impl Property {
         })
     }
 
-    pub fn to_text(&self) -> Text{
+    pub fn to_text(&self) -> Text<'_> {
         let access_check = |f: bool| -> &str {
             if let true = f {
                 "可能"
-            }else {
+            } else {
                 "不可"
             }
         };
 
         let spans = vec![
-            Line::from(
-                Span::styled(
-                    "プロパティモード",
-                    Style::default().fg(ratatui::style::Color::DarkGray)
-                )
-            ),
+            Line::from(Span::styled(
+                "プロパティモード",
+                Style::default().fg(ratatui::style::Color::DarkGray),
+            )),
             Line::default(),
             Line::from("ファイル名：".to_string() + &self.file_name),
             Line::from("場所：".to_string() + self.place.to_str().unwrap()),
@@ -75,27 +80,26 @@ impl Property {
             Line::from("最終更新日　　：".to_string() + &time_check(&self.last_update)),
             Line::from("最終アクセス　：".to_string() + &time_check(&self.last_access)),
         ];
-        
+
         Text::from(spans)
-    } 
+    }
 }
 
 /// 時刻を取得し出来たら値を返す。<br>
 /// 第二引数が以下のものを返す <br>
 /// [Get::CreateTime] -> ファイル作成した日時<br>
 /// [Get::UpdateTime] -> ファイル更新日時<br>
-/// [Get::LastAccess] -> ファイルに最後にアクセスした日時 
+/// [Get::LastAccess] -> ファイルに最後にアクセスした日時
 #[inline]
 fn get_time(metadata: &Metadata, x: Get) -> Result<NaiveDateTime, Error> {
-    if let Some(x) = DateTime::<Utc>::from(
-                match x {
-                    Get::CreateTime => metadata.created()?,
-                    Get::UpdateTime => metadata.modified()?,
-                    Get::LastAccess => metadata.accessed()?,
-                }
-            )
-            .naive_local()
-            .checked_add_signed(TimeDelta::try_hours(TIME_DIFFERENSE).unwrap()) {
+    if let Some(x) = DateTime::<Utc>::from(match x {
+        Get::CreateTime => metadata.created()?,
+        Get::UpdateTime => metadata.modified()?,
+        Get::LastAccess => metadata.accessed()?,
+    })
+    .naive_local()
+    .checked_add_signed(TimeDelta::try_hours(TIME_DIFFERENSE).unwrap())
+    {
         Ok(x)
     } else {
         Err(Error::new(ErrorKind::Other, "err"))
@@ -105,16 +109,20 @@ fn get_time(metadata: &Metadata, x: Get) -> Result<NaiveDateTime, Error> {
 #[inline]
 fn time_check(time: &Result<NaiveDateTime, Error>) -> String {
     match time {
-        Ok(date_time) => {
-            [&date_time.date().year().to_string() , "年" ,
-                &date_time.date().month().to_string() , "月" ,
-                &date_time.date().day().to_string() , "日" ,
-                &date_time.hour().to_string() , "時" , 
-                &date_time.minute().to_string() , "分"].concat()
-        },
+        Ok(date_time) => [
+            &date_time.date().year().to_string(),
+            "年",
+            &date_time.date().month().to_string(),
+            "月",
+            &date_time.date().day().to_string(),
+            "日",
+            &date_time.hour().to_string(),
+            "時",
+            &date_time.minute().to_string(),
+            "分",
+        ]
+        .concat(),
 
-        Err(_) => {
-            "取得できませんでした".to_string()
-        }
+        Err(_) => "取得できませんでした".to_string(),
     }
 }
