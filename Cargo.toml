@@ -1,0 +1,18 @@
+[package]
+name = "tui-cat"
+version = "3.0.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+chrono = "0.4.19"
+console = "0.15.7"
+crossterm = "0.28.0"
+ratatui = "0.28.0"
+syntect = "5.3.0"
+
+[profile.release]
+lto = true
+codegen-units = 4
+opt-level = 3
